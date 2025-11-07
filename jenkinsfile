@@ -3,7 +3,7 @@ pipeline {
 
      environment {
         SSH_CRED = 'node-app-key'               // Jenkins credential ID
-        SERVER_IP = '15.207.223.127'          // Your Deploy EC2 IP
+        SERVER_IP = '13.201.185.139'          // Your Deploy EC2 IP
         REMOTE_USER = 'ubuntu'
         WEB_DIR = '/var/www/html/'
     }
@@ -12,7 +12,7 @@ pipeline {
         stage('Checkout Code') {
             steps {
                 git branch: 'main',
-                  url: 'https://github.com/USERNAME/portfolio-app.git'
+                  url: 'https://github.com/aniketchougule108/portfolio-app-deploy.git'
             }
         }
 
