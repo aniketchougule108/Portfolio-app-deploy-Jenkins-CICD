@@ -1,60 +1,90 @@
 pipeline {
-    agent any
+  agent any
 
-     environment {
-        SSH_CRED = 'node-app-key'               // Jenkins credential ID
-        SERVER_IP = '13.201.185.139'          // Your Deploy EC2 IP
-        REMOTE_USER = 'ubuntu'
-        WEB_DIR = '/var/www/html/'
+  environment {
+    EC2_USER = "ubuntu"
+    EC2_HOST = "13.201.185.139"  // CHANGE THIS
+    APP_DIR = "/var/www/portfolio"
+    SSH_CREDENTIALS_ID = "node-app-key"   // Credentials ID in Jenkins
+  }
+
+  stages {
+    stage('Checkout Code') {
+      steps {
+        checkout scm
+      }
     }
-    
-    stages {
-        stage('Checkout Code') {
-            steps {
-                git branch: 'main',
-                  url: 'https://github.com/aniketchougule108/portfolio-app-deploy.git'
-            }
-        }
 
-        stage('Install Dependencies (if Node/React)') {
-            steps {
-                script {
-                    if (fileExists('package.json')) {
-                        sh 'npm install'
-                        sh 'npm run build || echo "No build script found"'
-                    }
-                }
-            }
-        }
+    stage('Install Requirements on EC2') {
+      steps {
+        sshagent([env.SSH_CREDENTIALS_ID]) {
+          sh """
+          ssh -o StrictHostKeyChecking=no ${EC2_USER}@${EC2_HOST} '
+            sudo apt update -y
+            sudo apt install -y curl git build-essential
 
-        stage('Deploy to Server') {
-            steps {
-                sshagent(['EC2_KEY']) {
-                    sh """
-                    ssh -o StrictHostKeyChecking=no ubuntu@${SERVER_IP}'
-                        sudo rm -rf ${APP_DIR} &&
-                        sudo mkdir -p ${APP_DIR}
-                    '
-                    scp -o StrictHostKeyChecking=no -r ./build/* ubuntu@${SERVER_IP}:${APP_DIR} || \
-                    scp -o StrictHostKeyChecking=no -r ./* ubuntu@${SERVER_IP}:${APP_DIR}
-                    """
-                }
-            }
-        }
+            # Install Node (if not installed)
+            if ! command -v node &> /dev/null; then
+              curl -fsSL https://deb.nodesource.com/setup_18.x | sudo -E bash -
+              sudo apt install -y nodejs
+            fi
 
-        stage('Restart Node Server') {
-            steps {
-                sshagent(["${SSH_CRED}"]) {
-                    sh """
-                    ssh -o StrictHostKeyChecking=no ubuntu@${SERVER_IP} '
-                        cd ${APP_DIR}
-                        pm2 delete portfolio || true
-                        pm2 start server.js --name portfolio
-                        pm2 save
-                    '
-                    """
-                }
-            }
+            # Install PM2 (if not installed)
+            if ! command -v pm2 &> /dev/null; then
+              sudo npm install -g pm2
+            fi
+
+            # Create app folder if not exists
+            sudo mkdir -p ${APP_DIR}
+            sudo chown -R ${EC2_USER}:${EC2_USER} ${APP_DIR}
+          '
+          """
         }
+      }
     }
+
+    stage('Copy Files to EC2') {
+      steps {
+        sshagent([env.SSH_CREDENTIALS_ID]) {
+          script {
+            sh "tar --exclude='.git' --exclude='node_modules' -czf /tmp/deploy.tar.gz ."
+            sh "scp -o StrictHostKeyChecking=no /tmp/deploy.tar.gz ${EC2_USER}@${EC2_HOST}:/tmp/deploy.tar.gz"
+            sh """
+            ssh -o StrictHostKeyChecking=no ${EC2_USER}@${EC2_HOST} '
+              cd ${APP_DIR}
+              tar -xzf /tmp/deploy.tar.gz -C ${APP_DIR}
+              rm /tmp/deploy.tar.gz
+            '
+            """
+          }
+        }
+      }
+    }
+
+    stage('Install Node Modules & Restart App') {
+      steps {
+        sshagent([env.SSH_CREDENTIALS_ID]) {
+          sh """
+          ssh -o StrictHostKeyChecking=no ${EC2_USER}@${EC2_HOST} '
+            cd ${APP_DIR}
+            npm install --production
+
+            pm2 delete portfolio || true
+            pm2 start server.js --name portfolio --update-env
+            pm2 save
+          '
+          """
+        }
+      }
+    }
+  }
+
+  post {
+    success {
+      echo "✅ Deployment completed successfully!"
+    }
+    failure {
+      echo "❌ Deployment failed. Check logs in Jenkins console."
+    }
+  }
 }
