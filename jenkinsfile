@@ -1,90 +1,66 @@
 pipeline {
-  agent any
+    agent any
 
-  environment {
-    EC2_USER = "ubuntu"
-    EC2_HOST = "13.201.185.139"  // CHANGE THIS
-    APP_DIR = "/var/www/portfolio"
-    SSH_CREDENTIALS_ID = "node-app-key"   // Credentials ID in Jenkins
-  }
-
-  stages {
-    stage('Checkout Code') {
-      steps {
-        checkout scm
-      }
+    environment {
+        DEPLOY_USER = 'ubuntu'                // <-- your remote server username
+        DEPLOY_HOST = '52.66.235.42'          // <-- your EC2 public or private IP
+        DEPLOY_PATH = '/var/www/html'         // <-- web root
+        SSH_CREDENTIALS_ID = 'node-app-key'     // <-- Jenkins credentials ID
+        REPO_URL = 'https://github.com/aniketchougule108/portfolio-app-deploy.git'
+        BRANCH = 'main'
     }
 
-    stage('Install Requirements on EC2') {
-      steps {
-        sshagent([env.SSH_CREDENTIALS_ID]) {
-          sh """
-          ssh -o StrictHostKeyChecking=no ${EC2_USER}@${EC2_HOST} '
-            sudo apt update -y
-            sudo apt install -y curl git build-essential
-
-            # Install Node (if not installed)
-            if ! command -v node &> /dev/null; then
-              curl -fsSL https://deb.nodesource.com/setup_18.x | sudo -E bash -
-              sudo apt install -y nodejs
-            
-
-            # Install PM2 (if not installed)
-            if ! command -v pm2 &> /dev/null; then
-              sudo npm install -g pm2
-            fi
-
-            # Create app folder if not exists
-            sudo mkdir -p ${APP_DIR}
-            sudo chown -R ${EC2_USER}:${EC2_USER} ${APP_DIR}
-          '
-          """
+    stages {
+        stage('Checkout Code') {
+            steps {
+                echo '📦 Checking out portfolio code from GitHub...'
+                git branch: "${BRANCH}", url: "${REPO_URL}"
+            }
         }
-      }
-    }
 
-    stage('Copy Files to EC2') {
-      steps {
-        sshagent([env.SSH_CREDENTIALS_ID]) {
-          script {
-            sh "tar --exclude='.git' --exclude='node_modules' -czf /tmp/deploy.tar.gz ."
-            sh "scp -o StrictHostKeyChecking=no /tmp/deploy.tar.gz ${EC2_USER}@${EC2_HOST}:/tmp/deploy.tar.gz"
-            sh """
-            ssh -o StrictHostKeyChecking=no ${EC2_USER}@${EC2_HOST} '
-              cd ${APP_DIR}
-              tar -xzf /tmp/deploy.tar.gz -C ${APP_DIR}
-              rm /tmp/deploy.tar.gz
-            '
-            """
-          }
+        stage('Prepare Deployment Server') {
+            steps {
+                echo '⚙️ Setting up Nginx and cleaning old files on remote server...'
+                sshagent (credentials: ["${SSH_CREDENTIALS_ID}"]) {
+                    sh """
+                        ssh -o StrictHostKeyChecking=no ${DEPLOY_USER}@${DEPLOY_HOST} '
+                            sudo apt update -y &&
+                            sudo apt install nginx -y &&
+                            sudo systemctl enable nginx &&
+                            sudo systemctl start nginx &&
+                            sudo mkdir -p ${DEPLOY_PATH} &&
+                            sudo chown -R ${DEPLOY_USER}:${DEPLOY_USER} ${DEPLOY_PATH} &&
+                            sudo chmod -R 755 ${DEPLOY_PATH} &&
+                            sudo rm -rf ${DEPLOY_PATH}/*
+                        '
+                    """
+                }
+            }
         }
-      }
-    }
 
-    stage('Install Node Modules & Restart App') {
-      steps {
-        sshagent([env.SSH_CREDENTIALS_ID]) {
-          sh """
-          ssh -o StrictHostKeyChecking=no ${EC2_USER}@${EC2_HOST} '
-            cd ${APP_DIR}
-            npm install --production
-
-            pm2 delete portfolio || true
-            pm2 start server.js --name portfolio --update-env
-            pm2 save
-          '
-          """
+        stage('Deploy Portfolio') {
+            steps {
+                echo '🚀 Deploying new portfolio build to server...'
+                sshagent (credentials: ["${SSH_CREDENTIALS_ID}"]) {
+                    sh """
+                        scp -o StrictHostKeyChecking=no -r img index.html ${DEPLOY_USER}@${DEPLOY_HOST}:/tmp/
+                        ssh -o StrictHostKeyChecking=no ${DEPLOY_USER}@${DEPLOY_HOST} '
+                            sudo mv /tmp/index.html ${DEPLOY_PATH}/ &&
+                            sudo mv /tmp/img ${DEPLOY_PATH}/ &&
+                            sudo systemctl restart nginx
+                        '
+                    """
+                }
+            }
         }
-      }
     }
-  }
 
-  post {
-    success {
-      echo "✅ Deployment completed successfully!"
+    post {
+        success {
+            echo '✅ Deployment successful! Visit your EC2 IP in browser to see your portfolio.'
+        }
+        failure {
+            echo '❌ Deployment failed. Please check Jenkins logs.'
+        }
     }
-    failure {
-      echo "❌ Deployment failed. Check logs in Jenkins console."
-    }
-  }
 }
