@@ -74,7 +74,6 @@ PORTFOLIO-APP-CI-CD/
 Create a repository on Github Name: `portfolio-app-deploy-jenkins-CICD` Branch: main
 
 ![](./img/github%20Screenshot.png)
-
 ---
 
 ### 🧰 2. Initialize Git and Push Code to GitHub 
