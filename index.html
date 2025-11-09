@@ -17,9 +17,9 @@
     /* Navbar */
     nav {
         display:flex;
-        justify-content:flex-end;
-        gap:25px;
-        padding:20px 50px;
+        justify-content:center;
+        gap:35px;
+        padding:18px 0;
         background:#fff;
         position:fixed;
         width:100%;
@@ -27,16 +27,24 @@
         box-shadow:0 2px 8px rgba(0,0,0,0.1);
         z-index:999;
     }
-    nav a { color:#444; font-weight:bold; text-decoration:none; transition:0.3s; }
-    nav a:hover { color:#ff5733; }
+    nav a {
+        color:#444;
+        font-weight:bold;
+        text-decoration:none;
+        transition:0.3s;
+        font-size:16px;
+    }
+    nav a:hover {
+        color:#ff5733;
+    }
 
     /* Hero */
     header {
-        padding-top:120px;
+        padding-top:140px;
         display:flex;
         justify-content:space-between;
         align-items:center;
-        padding:120px 10%;
+        padding:140px 10%;
     }
     .title h1 { font-size:3rem; font-weight:700; }
     .title span { color:#ff5733; }
@@ -60,7 +68,7 @@
     }
 
     .hero-img img {
-        width:330px;
+        width:350px;
         border-radius:12px;
         border:3px solid #ff5733;
         box-shadow:0 5px 22px rgba(0,0,0,0.15);
@@ -71,7 +79,7 @@
     }
 
     section { padding:80px 10%; }
-    h2 { color:#ff5733; margin-bottom:25px; }
+    h2 { color:#ff5733; margin-bottom:25px; font-size:2rem; }
 
     /* Skills */
     .skills {
@@ -81,7 +89,7 @@
         padding:10px 25px;
         background:#ffebe5;
         border-radius:30px;
-        font-size:14px;
+        font-size:15px;
         border:1px solid #ffbdad;
         transition:0.3s;
         font-weight:600;
@@ -150,7 +158,7 @@
     <div class="title">
         <p>Hello<span>.</span></p>
         <h1>I'm <span>Aniket Chougule</span></h1>
-        <h2>Cloud & Devops Specialists</h2>
+        <h2>Cloud & DevOps Specialist</h2>
         <div class="btn-group">
             <a href="https://github.com/aniketchougule108" target="_blank">GitHub</a>
             <a href="resume.pdf" target="_blank">My Resume</a>
@@ -177,9 +185,9 @@
     <h2>About Me</h2>
     <div class="about-box">
         <p>
-            I am a motivated DevOps and with hands-on experience in automating deployments,
-            configuring CI/CD pipelines, and hosting applications on cloud environments.
-            I focus on efficient workflows, server management, and secure deployments.
+            I am a highly motivated Cloud & DevOps Engineer with hands-on experience in automating deployments,
+            building CI/CD pipelines, and hosting applications on cloud platforms like AWS.
+            I focus on secure deployments, performance tuning, and efficient automation workflows.
         </p>
         <div class="stats">
             <div class="stat">
@@ -202,12 +210,12 @@
         <p>Automated Node.js deployment using Jenkins, GitHub Webhook, PM2 & AWS EC2.</p>
     </div>
     <div class="project-card">
-        <h3>Master-Slave Architecture</h3>
-        <p>Configured Jenkins master and agent for distributed builds.</p>
+        <h3>Master–Slave Architecture</h3>
+        <p>Configured Jenkins master and agent for distributed build automation.</p>
     </div>
     <div class="project-card">
         <h3>Portfolio Hosting</h3>
-        <p>Hosted portfolio using Nginx and Git version control.</p>
+        <p>Deployed portfolio using Nginx and Git version control.</p>
     </div>
 </section>
 
