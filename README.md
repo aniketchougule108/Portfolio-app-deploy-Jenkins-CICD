@@ -1,6 +1,7 @@
 # 🌐 Portfolio Website — CI/CD Automation (DevOps Project)
 ## Aniket Chougule - Portfolio
 
+### 🚀 Overview
 * A fully automated deployment pipeline for a static Portfolio Website using **GitHub → Jenkins → AWS EC2 → Nginx** Web Server.
 * This project demonstrates practical DevOps implementation including Continuous Integration, Continuous Deployment, Cloud Hosting, and Infrastructure Automation.
 
@@ -10,7 +11,7 @@
 
 ![](./img/architecture.png)
 ---
-
+### 🧩 Tech Stack
 <table border="1" cellspacing="0" cellpadding="8">
   <tr>
     <th>Tool/Service</th>
@@ -67,10 +68,14 @@ PORTFOLIO-APP-CI-CD/
 │── Jenkinsfile
 
 ```
+---
+
 ### ✅ 1. Create GitHub Repo
 Create a repository on Github Name: `portfolio-app-deploy-jenkins-CICD` Branch: main
 
 ![](./img/github%20Screenshot.png)
+
+---
 
 ### 🧰 2. Initialize Git and Push Code to GitHub 
 sed Git to version control and push code to GitHub.
@@ -102,7 +107,7 @@ git push -u origin main
 
 ![](./img/cred%20Screenshot.png)
 ---
-### ✅ 4. Setup Portfolio EC2 (Server 2)
+### ✅ 4. Setup Portfolio EC2 (Srver 2)
 
 * Launch a new Ubuntu EC2 instance for portfolio hosting.
 * Open inbound port 80 (HTTP) in AWS Security Group.
